@@ -1,1 +1,2 @@
-# pydata-london-2026-sql
+# Semantic layer project for Pydata London 2026
+
