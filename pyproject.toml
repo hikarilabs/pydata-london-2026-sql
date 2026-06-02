@@ -5,7 +5,9 @@ description = "Sample implementation of a semantic layer using semantido"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pydantic-ai==1.104.0",
+    "pydantic-ai==1.105.0",
+    "logfire[fastapi]==4.35.0",
+    "structlog==25.5.0",
     "semantido==0.2.1",
     "asyncpg==0.31.0",
     "sqlalchemy==2.0.50",

@@ -43,7 +43,10 @@ class DatabaseSessionManager:
 
 class PostgresClient:
     def __init__(
-        self, database_url: str, ssl_mode: str | None = None, default_schema: str = "public"
+        self,
+        database_url: str,
+        ssl_mode: str | None = None,
+        default_schema: str = "public",
     ):
         self.database_url = database_url
         self.ssl_mode = ssl_mode
