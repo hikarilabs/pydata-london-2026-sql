@@ -43,7 +43,7 @@ class DatabaseSessionManager:
 
 class PostgresClient:
     def __init__(
-        self, database_url: str, ssl_mode: str = None, default_schema: str = "public"
+        self, database_url: str, ssl_mode: str | None = None, default_schema: str = "public"
     ):
         self.database_url = database_url
         self.ssl_mode = ssl_mode
@@ -91,7 +91,7 @@ class PostgresClient:
         return DatabaseSessionManager(self.database_url, engine_args=engine_args)
 
     @contextlib.asynccontextmanager
-    async def session(self, schema: str = None):
+    async def session(self, schema: str | None = None):
         async with self._session_manager.session() as session:
             target_schema = schema or self.default_schema
             if target_schema:
@@ -107,13 +107,13 @@ class PostgresClient:
             schema, database = result.one()
             print(f"✅ Connected to database='{database}', schema='{schema}'")
 
-    async def execute_query(self, query: str, schema: str = None):
+    async def execute_query(self, query: str, schema: str | None = None):
         try:
             async with self.session(schema=schema) as session:
                 result = await session.execute(text(query))
                 return result.fetchall()
         except Exception as e:
-            raise e
+            raise
 
     async def close(self):
         if self._session_manager:
