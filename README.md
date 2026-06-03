@@ -1,4 +1,4 @@
-# Semantic layer project for Pydata London 2026
+# Semantic Layer project for Pydata London 2026
 
 # Setup instructions:
 
