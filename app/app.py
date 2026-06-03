@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse
 from db.client import PostgresClient
 from dependencies.state import app_state
 from routes import semantic
+from schema.create_ddl import load_ddl_schema
 
 service_name = os.getenv("LOGFIRE_SERVICE_NAME")
 environment = os.getenv("LOGFIRE_ENV")
@@ -36,12 +37,15 @@ async def lifespan(_app: FastAPI):
         semantic_models = app_state.semantic_bridge.sync_from_models()
         app_state.semantic_layer = semantic_models.to_json()
 
-        # Startup: Initialize workout database connection pool
-        print("Initializing workout database connection...")
+        print("📄 Loading DDL schema...")
+        app_state.ddl_schema = load_ddl_schema()
+
+        # Startup: Initialize neon database connection pool
+        print("Initializing neon database connection...")
         db_client = PostgresClient.from_env(default_schema="data_service")
         await db_client.connect()
         app_state.db_client = db_client
-        print("🚀 Connected to workout database")
+        print("🚀 Connected to neon database")
 
         print("🚀 Application started...")
         yield

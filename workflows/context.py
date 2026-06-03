@@ -20,7 +20,9 @@ class AgentConfig:
 @dataclass
 class WorkflowContext:
     workflow_id: UUID
-    user_prompt: str
+    user_id: int
+    workflow_type: str
+    user_query: str
     config: AgentConfig
 
     # Derived state -> mutated by workflow steps

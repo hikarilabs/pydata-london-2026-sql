@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-import asyncio
+from uuid import uuid4
 
-from dependencies.state import DbClient, DdlSchema
+from dependencies.state import DbClient, DdlSchema, SemanticLayer
 from workflows.chat.workflow import chat_workflow_processor
 from workflows.context import AgentConfig
 
@@ -17,7 +17,7 @@ class ChatRequest(BaseModel):
 
 class Workflow(BaseModel):
     step: str = "complete"
-    user_query: str
+    customer_query: str
     summary: str
 
 
@@ -42,10 +42,9 @@ async def ddl(
 
     return StreamingResponse(
         chat_workflow_processor(
-            user_id=body.user_id,
-            session_id=body.session_id,
-            user_query=body.user_query,
-            workflow_id=workflow_id,
+            customer_id=body.cust_id,
+            customer_query=body.customer_query,
+            workflow_id=uuid4(),
             workflow_type="chat",
             config=config,
         ),
@@ -57,7 +56,7 @@ async def ddl(
 async def semantic(
     body: ChatRequest,
     db_client: DbClient,
-    ddl_schema: DdlSchema,
+    semantic_layer: SemanticLayer,
 ):
     """
     Accepts a user query and streams the workflow steps back to the client via SSE.
@@ -65,15 +64,14 @@ async def semantic(
     """
     config = AgentConfig(
         db_client=db_client,
-        ddl_schema=ddl_schema,
+        semantic_layer=semantic_layer,
     )
 
     return StreamingResponse(
         chat_workflow_processor(
-            user_id=body.user_id,
-            session_id=body.session_id,
-            user_query=body.user_query,
-            workflow_id=workflow_id,
+            customer_id=body.cust_id,
+            customer_query=body.customer_query,
+            workflow_id=uuid4(),
             workflow_type="chat",
             config=config,
         ),

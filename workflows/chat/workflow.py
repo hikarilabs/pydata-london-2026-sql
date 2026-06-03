@@ -4,7 +4,6 @@ Each workflow defines a specific execution path through the available steps.
 """
 
 import json
-import httpx
 from typing import AsyncIterator
 from uuid import UUID
 
@@ -12,9 +11,9 @@ from workflows.context import WorkflowContext, AgentConfig
 from workflows.steps import (
     step_classify_query,
     step_generate_sql,
-    step_validate_sql,
-    step_execute_sql,
-    step_summarize_and_render,
+    # step_validate_sql,
+    # step_execute_sql,
+    # step_summarize_and_render,
 )
 
 # ==================== MAIN TEXT-TO-SQL WORKFLOW ====================
@@ -22,6 +21,7 @@ from workflows.steps import (
 
 async def chat_workflow_processor(
     customer_id: int,
+    workflow_id: UUID,
     workflow_type: str,
     customer_query: str,
     config: AgentConfig,
@@ -37,6 +37,7 @@ async def chat_workflow_processor(
         customer_id: Authenticated user's ID
         customer_query: Natural language query from the user
         workflow_type: Type of workflow (e.g., 'chat', 'report')
+        workflow_id: unique identifier for a workflow
         config
 
     Yields:
@@ -45,18 +46,17 @@ async def chat_workflow_processor(
     try:
         # Initialize shared context
         ctx = WorkflowContext(
-            user_id=user_id,
-            session_id=session_id,
+            user_id=customer_id,
             workflow_id=workflow_id,
             workflow_type=workflow_type,
-            user_query=user_query,
+            user_query=customer_query,
             config=config,
         ).register(
             step_classify_query,
             step_generate_sql,
-            step_validate_sql,
-            step_execute_sql,
-            step_summarize_and_render,
+            # step_validate_sql,
+            # step_execute_sql,
+            # step_summarize_and_render,
         )
 
         async for event in ctx.run():
