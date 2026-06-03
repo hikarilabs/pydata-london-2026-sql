@@ -2,7 +2,7 @@ import json
 from typing import AsyncIterator
 
 from agents.sql_generator.agent import sql_generator_agent, Deps
-from utils.logger import logger
+from app.dependecies.logger import logger
 from workflows.context import WorkflowContext
 
 

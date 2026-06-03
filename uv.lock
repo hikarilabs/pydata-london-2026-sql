@@ -1812,6 +1812,9 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+asyncpg = [
+    { name = "opentelemetry-instrumentation-asyncpg" },
+]
 fastapi = [
     { name = "opentelemetry-instrumentation-fastapi" },
 ]
@@ -2259,6 +2262,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/77/db/851fa88db7441da82d50bd80f2de5ee55213782e25dc858e04d0c9961d60/opentelemetry_instrumentation_asgi-0.60b1.tar.gz", hash = "sha256:16bfbe595cd24cda309a957456d0fc2523f41bc7b076d1f2d7e98a1ad9876d6f", size = 26107 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/76/1fb94367cef64420d2171157a6b9509582873bd09a6afe08a78a8d1f59d9/opentelemetry_instrumentation_asgi-0.60b1-py3-none-any.whl", hash = "sha256:d48def2dbed10294c99cfcf41ebbd0c414d390a11773a41f472d20000fcddc25", size = 16933 },
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-asyncpg"
+version = "0.60b1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "opentelemetry-semantic-conventions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/da/ec/6bd1dba7435cf54b52046d89cac1541d0cc4411f74adbcec50420025f4f5/opentelemetry_instrumentation_asyncpg-0.60b1.tar.gz", hash = "sha256:56dbafc800b83de839e8048cc0a8b76dc2d4182fce6f1fd94aa95ba3f8a2f800", size = 8725 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/99/04899e21a64dff4e551c63b4426c921628a73df8fbe9cd1f60b18bd9142e/opentelemetry_instrumentation_asyncpg-0.60b1-py3-none-any.whl", hash = "sha256:3d64346571822188445bef7c8219709e6ee76f9ed2583a07c503e619f6dd4169", size = 10087 },
 ]
 
 [[package]]
@@ -2857,7 +2874,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "greenlet" },
     { name = "jupyterlab" },
-    { name = "logfire", extra = ["fastapi"] },
+    { name = "logfire", extra = ["asyncpg", "fastapi"] },
     { name = "pydantic-ai" },
     { name = "python-dotenv" },
     { name = "semantido" },
@@ -2877,6 +2894,7 @@ requires-dist = [
     { name = "fastapi", specifier = "==0.136.3" },
     { name = "greenlet", specifier = "==3.5.1" },
     { name = "jupyterlab", specifier = ">=4.5.7" },
+    { name = "logfire", extras = ["asyncpg"], specifier = "==4.35.0" },
     { name = "logfire", extras = ["fastapi"], specifier = "==4.35.0" },
     { name = "pydantic-ai", specifier = "==1.105.0" },
     { name = "python-dotenv", specifier = "==1.2.2" },

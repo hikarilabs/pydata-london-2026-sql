@@ -19,7 +19,9 @@ class AccountInfo(SemanticDeclarativeBase):
 
     acct_id = Column(Integer, primary_key=True, autoincrement=True)
     acct_no = Column(String(20), nullable=False, unique=True)
-    prod_id = Column(Integer, ForeignKey("data_service.products.prod_id"), nullable=False)
+    prod_id = Column(
+        Integer, ForeignKey("data_service.products.prod_id"), nullable=False
+    )
     acct_stat = Column(
         String(10), nullable=False, server_default="ACTIVE"
     )  # ACTIVE, DORMANT, FROZEN, CLOSED

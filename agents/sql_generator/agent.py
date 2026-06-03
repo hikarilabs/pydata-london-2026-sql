@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Optional, Literal
 
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent, RunContext, ModelSettings
 from pydantic import BaseModel, Field
 
 from agents.sql_generator.prompts import sql_generator_p1
@@ -11,7 +11,8 @@ from agents.sql_generator.prompts import sql_generator_p1
 class Deps:
     """Dependencies for the agent, holding the semantic layer data."""
 
-    semantic_layer: str | dict[str, Any] | None
+    semantic_layer: Optional[dict[str, Any] | str] = None
+    schema: Optional[str] = None
 
 
 class SqlResponse(BaseModel):
@@ -25,7 +26,12 @@ class SqlResponse(BaseModel):
 
 
 # Define the Generator Agent
-sql_generator_agent = Agent("openai:gpt-4o", output_type=SqlResponse, deps_type=Deps)
+sql_generator_agent = Agent(
+    "openai:gpt-4o",
+    output_type=SqlResponse,
+    deps_type=Deps,
+    model_settings=ModelSettings(temperature=0.0),
+)
 
 
 @sql_generator_agent.system_prompt

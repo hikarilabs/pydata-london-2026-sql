@@ -5,7 +5,9 @@ from sqlalchemy import create_mock_engine
 from sqlalchemy.schema import CreateTable, CreateIndex
 from semantido.models.declarative_base import SemanticDeclarativeBase
 
-dialect = create_mock_engine("postgresql+psycopg2://", executor=lambda sql, *a, **kw: None).dialect
+dialect = create_mock_engine(
+    "postgresql+psycopg2://", executor=lambda sql, *a, **kw: None
+).dialect
 
 
 def generate_ddl(output_file: str | None = None) -> str:
