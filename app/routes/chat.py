@@ -3,34 +3,79 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import asyncio
 
+from dependencies.state import DbClient, DdlSchema
+from workflows.chat.workflow import chat_workflow_processor
+from workflows.context import AgentConfig
+
 router = APIRouter()
 
 
-class Message(BaseModel):
-    role: str
-    content: str
-
-
 class ChatRequest(BaseModel):
-    messages: list[Message]
+    cust_id: int
+    customer_query: str
 
 
-@router.post("/api/chat/stream")
-async def chat_stream(request: ChatRequest):
-    async def generate():
-        # Your streaming logic here
-        # This is just an example - replace with your actual LLM streaming
-        response_text = "This is streaming from FastAPI backend"
+class Workflow(BaseModel):
+    step: str = "complete"
+    user_query: str
+    summary: str
 
-        for word in response_text.split():
-            yield f"{word} "
-            await asyncio.sleep(0.05)
+
+class WorkflowResponse(BaseModel):
+    workflows: list[Workflow]
+
+
+@router.post("/api/chat/ddl/stream")
+async def ddl(
+    body: ChatRequest,
+    db_client: DbClient,
+    ddl_schema: DdlSchema,
+):
+    """
+    Accepts a user query and streams the workflow steps back to the client via SSE.
+    Semantic layer is injected as a dependency and pre-fetched.
+    """
+    config = AgentConfig(
+        db_client=db_client,
+        ddl_schema=ddl_schema,
+    )
 
     return StreamingResponse(
-        generate(),
-        media_type="text/plain",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        },
+        chat_workflow_processor(
+            user_id=body.user_id,
+            session_id=body.session_id,
+            user_query=body.user_query,
+            workflow_id=workflow_id,
+            workflow_type="chat",
+            config=config,
+        ),
+        media_type="text/event-stream",
+    )
+
+
+@router.post("/api/chat/semantic/stream")
+async def semantic(
+    body: ChatRequest,
+    db_client: DbClient,
+    ddl_schema: DdlSchema,
+):
+    """
+    Accepts a user query and streams the workflow steps back to the client via SSE.
+    Semantic layer is injected as a dependency and pre-fetched.
+    """
+    config = AgentConfig(
+        db_client=db_client,
+        ddl_schema=ddl_schema,
+    )
+
+    return StreamingResponse(
+        chat_workflow_processor(
+            user_id=body.user_id,
+            session_id=body.session_id,
+            user_query=body.user_query,
+            workflow_id=workflow_id,
+            workflow_type="chat",
+            config=config,
+        ),
+        media_type="text/event-stream",
     )

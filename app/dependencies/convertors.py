@@ -6,8 +6,8 @@ def json_to_markdown(semantic_data: dict) -> str:
     lines = []
 
     # Header
-    lines.append("# Database Schema - Semantic Layer\n")
-    lines.append("Machine-readable database schema for natural language queries\n")
+    lines.append("#Semantic Layer\n")
+    lines.append("Machine-readable semantic layer for natural language queries\n")
 
     # Extract tables - they're stored as a dict with table names as keys
     tables_dict = semantic_data.get("tables", {})
