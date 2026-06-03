@@ -3,8 +3,13 @@ from datetime import date
 from decimal import Decimal
 
 from db.client import PostgresClient
+
+# Import via the package so __init__.py runs and ALL models register
+# with SemanticDeclarativeBase before any mapper configuration is triggered
+import models  # noqa: F401
+
 from models.products import ProductCatalog
-from models.customers import Customers
+from models.customers import Customer
 from models.accounts import AccountInfo
 from models.customer_account_map import CustomerAccountMap
 from models.account_product_map import AccountProductMap
@@ -74,7 +79,7 @@ PRODUCTS = [
 ]
 
 CUSTOMERS = [
-    Customers(
+    Customer(
         cust_ref_no="CIF-001",
         f_name="Oliver",
         l_name="Hawthorne",
@@ -82,7 +87,7 @@ CUSTOMERS = [
         kyc_stat="VERIFIED",
         prim_email="o.hawthorne@email.co.uk",
     ),
-    Customers(
+    Customer(
         cust_ref_no="CIF-002",
         f_name="Amelia",
         l_name="Patel",
@@ -90,7 +95,7 @@ CUSTOMERS = [
         kyc_stat="VERIFIED",
         prim_email="a.patel@email.co.uk",
     ),
-    Customers(
+    Customer(
         cust_ref_no="CIF-003",
         f_name="Liam",
         l_name="Fitzgerald",
@@ -98,7 +103,7 @@ CUSTOMERS = [
         kyc_stat="VERIFIED",
         prim_email="l.fitzgerald@email.ie",
     ),
-    Customers(
+    Customer(
         cust_ref_no="CIF-004",
         f_name="Isabella",
         l_name="Reyes",
@@ -106,7 +111,7 @@ CUSTOMERS = [
         kyc_stat="VERIFIED",
         prim_email="isabelle.r@reyesltd.com",
     ),
-    Customers(
+    Customer(
         cust_ref_no="CIF-005",
         f_name="Thomas",
         l_name="Obi",

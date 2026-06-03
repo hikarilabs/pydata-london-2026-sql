@@ -1,18 +1,17 @@
-from sqlalchemy.orm import DeclarativeBase
-from models.account_product_map import AccountProductMap
-from models.accounts import AccountInfo
-from models.customer_account_map import CustomerAccountMap
-from models.customers import Customer
-from models.products import ProductCatalog
-from models.transaction_category import TransactionCategoryReference
+from models.products import ProductCatalog                        # no FK deps
+from models.customers import Customer                             # no FK deps
+from models.transaction_category import TransactionCategoryReference  # no FK deps
+from models.accounts import AccountInfo                           # FK → products
+from models.customer_account_map import CustomerAccountMap        # FK → customer, acct_info
+from models.account_product_map import AccountProductMap          # FK → acct_info, products
 from models.transactions import TransactionLedger
 
 __all__ = [
-    "AccountProductMap",
+    "ProductCatalog",
+    "Customer",
     "AccountInfo",
     "CustomerAccountMap",
-    "Customer",
-    "ProductCatalog",
+    "AccountProductMap",
     "TransactionCategoryReference",
     "TransactionLedger",
 ]

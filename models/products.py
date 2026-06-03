@@ -17,7 +17,6 @@ class ProductCatalog(SemanticDeclarativeBase):
     ccy_cd = Column(CHAR(3), nullable=True, server_default="GBP")
     is_avail_flg = Column(Boolean, nullable=False, server_default="true")
 
-    accounts = relationship("AcctInfo", back_populates="product")
     account_maps = relationship("AccountProductMap", back_populates="product")
 
     def __repr__(self) -> str:

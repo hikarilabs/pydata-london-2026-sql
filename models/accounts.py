@@ -33,7 +33,7 @@ class AccountInfo(SemanticDeclarativeBase):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    product = relationship("ProductCatalog", back_populates="accounts")
+    product = relationship("ProductCatalog")
     customer_maps = relationship("CustomerAccountMap", back_populates="account")
     product_maps = relationship("AccountProductMap", back_populates="account")
     transactions = relationship("TransactionLedger", back_populates="account")
