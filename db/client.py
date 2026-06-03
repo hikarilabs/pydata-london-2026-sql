@@ -2,9 +2,12 @@ import contextlib
 import os
 from typing import Any
 
+
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy import text, pool
+
+from db.url_utils import _normalise_url
 
 
 class DatabaseSessionManager:
@@ -65,11 +68,11 @@ class PostgresClient:
         else:
             load_dotenv()
 
-        database_url = os.getenv("SUPABASE_DB_URL")
+        database_url = os.getenv("DB_URL")
         if database_url is None:
-            raise ValueError("SUPABASE_DB_URL environment variable is required")
+            raise ValueError("DB_URL environment variable is required")
 
-        ssl_mode = os.getenv("SUPABASE_DB_SSL_MODE")
+        ssl_mode = os.getenv("DB_SSL_MODE")
 
         return cls(
             database_url=database_url, ssl_mode=ssl_mode, default_schema=default_schema
@@ -91,7 +94,8 @@ class PostgresClient:
             "poolclass": pool.NullPool,
         }
 
-        return DatabaseSessionManager(self.database_url, engine_args=engine_args)
+        url = _normalise_url(self.database_url)
+        return DatabaseSessionManager(url, engine_args=engine_args)
 
     @contextlib.asynccontextmanager
     async def session(self, schema: str | None = None):

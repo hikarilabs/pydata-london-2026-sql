@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String, Numeric, Boolean, CHAR
-from models import Base
+from sqlalchemy.orm import relationship
+from semantido.models.declarative_base import SemanticDeclarativeBase
 
 
-class ProductsCatalog(Base):
+class ProductCatalog(SemanticDeclarativeBase):
     __tablename__ = "products"
     __table_args__ = {"schema": "data_service"}
 
@@ -15,6 +16,9 @@ class ProductsCatalog(Base):
     fee_monthly_amt = Column(Numeric(10, 2), nullable=True, server_default="0")
     ccy_cd = Column(CHAR(3), nullable=True, server_default="GBP")
     is_avail_flg = Column(Boolean, nullable=False, server_default="true")
+
+    accounts = relationship("AcctInfo", back_populates="product")
+    account_maps = relationship("AccountProductMap", back_populates="product")
 
     def __repr__(self) -> str:
         return (

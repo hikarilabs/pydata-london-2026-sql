@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
-from models import Base
+from sqlalchemy.orm import relationship
+from semantido.models.declarative_base import SemanticDeclarativeBase
 
 
-class Customers(Base):
+class Customer(SemanticDeclarativeBase):
     __tablename__ = "customer"
     __table_args__ = {"schema": "data_service"}
 
@@ -15,12 +16,15 @@ class Customers(Base):
         String(10), nullable=True, default="PENDING"
     )  # PENDING, VERIFIED, FAILED
     prim_email = Column(String(150), nullable=True)
+
     created_ts = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_ts = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+    account_maps = relationship("CustomerAccountMap", back_populates="customer")
 
     def __repr__(self) -> str:
         return (
