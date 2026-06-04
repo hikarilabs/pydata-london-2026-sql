@@ -8,6 +8,7 @@ class Deps:
     """Dependencies for the agent, holding the semantic layer data."""
 
     semantic_layer: Optional[dict[str, Any] | str] = None
+    cust_id: Optional[int] = None
 
 
 class QueryType(str, Enum):

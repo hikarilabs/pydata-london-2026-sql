@@ -14,7 +14,7 @@ async def step_classify_query(ctx: WorkflowContext) -> AsyncIterator[str]:
 
     logger.info("user query", user_id=ctx.user_id, query=ctx.user_query)
 
-    deps = Deps(semantic_layer=ctx.config.semantics)
+    deps = Deps(semantic_layer=ctx.config.semantics, cust_id=ctx.user_id)
     query_type_result = await intent_classifier_agent.run(ctx.user_query, deps=deps)
 
     # TODO: track token usage per workflow step
@@ -79,7 +79,7 @@ async def step_generate_sql(ctx: WorkflowContext) -> AsyncIterator[str]:
     """Generate SQL from sanitized intent"""
     yield f"data: {json.dumps({'step': 'generating', 'message': 'Thinking...'})}\n\n"
 
-    deps = Deps(semantic_layer=ctx.config.semantics)
+    deps = Deps(semantic_layer=ctx.config.semantics, cust_id=ctx.user_id)
     generation_result = await sql_generator_agent.run(ctx.sanitized_query, deps=deps)
 
     # Clean the SQL: strip whitespace and trailing punctuation

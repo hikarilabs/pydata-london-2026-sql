@@ -7,17 +7,34 @@ from dependencies.state import app_state
 from dependencies.convertors import json_to_markdown
 
 router = APIRouter(
-    prefix="",
+    prefix="/view",
     tags=["SemanticRoutes"],
 )
 
+@router.get("/ddl", response_class=Response)
+async def semantic_markdown():
+    """
+    Returns the semantic layer as Markdown, optimized for LLM consumption.
+    This format is more readable and provides better context for natural language queries.
+    """
+    try:
+        # Parse the JSON semantic layer
+        ddl = app_state.ddl_schema
 
-@router.get("/semantic")
-def semantic():
-    return {"message": "Semantic"}
+        return Response(
+            content=ddl,
+            media_type="text/markdown; charset=utf-8",
+            headers={
+                "Content-Type": "text/markdown; charset=utf-8",
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "public, max-age=300",  # Cache for 5 minutes
+            },
+        )
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/markdown", response_class=Response)
+@router.get("/semantic/markdown", response_class=Response)
 async def semantic_markdown():
     """
     Returns the semantic layer as Markdown, optimized for LLM consumption.
@@ -44,7 +61,7 @@ async def semantic_markdown():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/view")
+@router.get("/semantic")
 async def semantic_view():
     """API root endpoint."""
     try:
