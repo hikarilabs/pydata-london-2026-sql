@@ -13,8 +13,7 @@ class AgentConfig:
     """
 
     db_client: PostgresClient  # Access to a database
-    semantic_layer: Optional[dict[str, Any] | str]
-    ddl_schema: Optional[str]
+    semantics: Optional[dict[str, Any] | str] = None
 
 
 @dataclass

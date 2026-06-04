@@ -9,11 +9,11 @@ from uuid import UUID
 
 from workflows.context import WorkflowContext, AgentConfig
 from workflows.steps import (
-    step_classify_query,
+    # step_classify_query,
     step_generate_sql,
     # step_validate_sql,
     # step_execute_sql,
-    # step_summarize_and_render,
+    # step_summarize,
 )
 
 # ==================== MAIN TEXT-TO-SQL WORKFLOW ====================
@@ -52,11 +52,11 @@ async def chat_workflow_processor(
             user_query=customer_query,
             config=config,
         ).register(
-            step_classify_query,
+            # step_classify_query,
             step_generate_sql,
             # step_validate_sql,
             # step_execute_sql,
-            # step_summarize_and_render,
+            # step_summarize,
         )
 
         async for event in ctx.run():

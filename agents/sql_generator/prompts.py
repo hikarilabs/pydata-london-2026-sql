@@ -5,31 +5,13 @@ Prompt templates for SQL generation agent.
 from datetime import date
 
 
-def _resolve_context(ctx) -> str:
-    """Return the best available schema context from deps."""
-    if ctx.deps.semantic_layer:
-        return (
-            "Use the following semantic layer to understand the database schema, "
-            "table relationships, and metrics:\n\n"
-            f"{ctx.deps.semantic_layer}"
-        )
-    if ctx.deps.schema:
-        return (
-            "Use the following database schema (DDL) to understand the available "
-            "tables and columns:\n\n"
-            f"{ctx.deps.schema}"
-        )
-    return "No schema or semantic layer was provided. Use general SQL knowledge."
-
-
-def sql_generator_p1(ctx) -> str:
+def sql_generator(ctx) -> str:
     """Full prompt with all rules for the main chat workflow."""
-    context_block = _resolve_context(ctx)
 
     return f"""
     You are a SQL expert for a banking application. You can only use valid PostgreSQL syntax.
 
-    {context_block}
+    {ctx.deps.semantic_layer}
 
     Based on the user's intent, generate a valid PostgreSQL query.
 

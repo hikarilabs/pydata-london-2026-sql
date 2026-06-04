@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse
 from db.client import PostgresClient
 from dependencies.state import app_state
 from routes import semantic
+from routes import chat
 from schema.create_ddl import load_ddl_schema
 
 service_name = os.getenv("LOGFIRE_SERVICE_NAME")
@@ -71,6 +72,7 @@ app = FastAPI(
 )
 
 app.include_router(semantic.router)
+app.include_router(chat.router)
 
 # Allow requests from your Next.js Vercel frontend
 app.add_middleware(

@@ -4,15 +4,8 @@ from typing import Any, Optional, Literal
 from pydantic_ai import Agent, RunContext, ModelSettings
 from pydantic import BaseModel, Field
 
-from agents.sql_generator.prompts import sql_generator_p1
-
-
-@dataclass
-class Deps:
-    """Dependencies for the agent, holding the semantic layer data."""
-
-    semantic_layer: Optional[dict[str, Any] | str] = None
-    schema: Optional[str] = None
+from agents.shared import Deps
+from agents.sql_generator.prompts import sql_generator
 
 
 class SqlResponse(BaseModel):
@@ -36,4 +29,4 @@ sql_generator_agent = Agent(
 
 @sql_generator_agent.system_prompt
 def inject_semantic_layer(ctx: RunContext[Deps]) -> str:
-    return sql_generator_p1(ctx)
+    return sql_generator(ctx)

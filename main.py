@@ -1,4 +1,8 @@
 import uvicorn
+from dotenv import load_dotenv
+
+load_dotenv()  # load .env before any module reads environment variables
+
 from app.dependencies.logger import logger
 
 if __name__ == "__main__":

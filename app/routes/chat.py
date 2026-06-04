@@ -7,7 +7,10 @@ from dependencies.state import DbClient, DdlSchema, SemanticLayer
 from workflows.chat.workflow import chat_workflow_processor
 from workflows.context import AgentConfig
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/chat",
+    tags=["SemanticRoutes"],
+)
 
 
 class ChatRequest(BaseModel):
@@ -25,19 +28,19 @@ class WorkflowResponse(BaseModel):
     workflows: list[Workflow]
 
 
-@router.post("/api/chat/ddl/stream")
+@router.post("/ddl/stream")
 async def ddl(
     body: ChatRequest,
     db_client: DbClient,
-    ddl_schema: DdlSchema,
+    semantics: DdlSchema,
 ):
     """
     Accepts a user query and streams the workflow steps back to the client via SSE.
-    Semantic layer is injected as a dependency and pre-fetched.
+    DDL schema is injected as a dependency and pre-fetched.
     """
     config = AgentConfig(
         db_client=db_client,
-        ddl_schema=ddl_schema,
+        semantics=semantics,
     )
 
     return StreamingResponse(
@@ -52,11 +55,11 @@ async def ddl(
     )
 
 
-@router.post("/api/chat/semantic/stream")
+@router.post("/semantic/stream")
 async def semantic(
     body: ChatRequest,
     db_client: DbClient,
-    semantic_layer: SemanticLayer,
+    semantics: SemanticLayer,
 ):
     """
     Accepts a user query and streams the workflow steps back to the client via SSE.
@@ -64,7 +67,7 @@ async def semantic(
     """
     config = AgentConfig(
         db_client=db_client,
-        semantic_layer=semantic_layer,
+        semantics=semantics,
     )
 
     return StreamingResponse(
