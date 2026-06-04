@@ -54,4 +54,29 @@ GROUP  BY c.cust_ref_no, c.f_name, c.l_name
 ORDER  BY total_spend DESC
 
 Balance ambiguity
-Which accounts are at risk of going overdrawn?
+-- Q16: "Which accounts are at risk of going overdrawn?"
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- NAIVE (broken — filters curr_bal; od_limit=0 edge case collapses to <0)
+SELECT acct_no, curr_bal_amt, od_limit_amt
+FROM   data_service.acct_info
+WHERE  curr_bal_amt < od_limit_amt * 0.2
+  AND  acct_stat   = 'ACTIVE'
+
+-- CORRECT (avail_bal filter; split WHERE for both facility populations)
+SELECT acct_no,
+       curr_bal_amt,
+       avail_bal_amt,
+       od_limit_amt,
+       avail_bal_amt + od_limit_amt AS total_headroom,
+       curr_bal_amt - avail_bal_amt AS held_amt
+FROM   data_service.acct_info
+WHERE  acct_stat = 'ACTIVE'
+  AND (
+      (od_limit_amt > 0
+          AND avail_bal_amt < od_limit_amt * 0.2)
+      OR
+      (od_limit_amt = 0
+          AND avail_bal_amt < 100)
+  )
+ORDER  BY avail_bal_amt ASC
