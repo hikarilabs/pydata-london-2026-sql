@@ -10,9 +10,9 @@ from semantido import SQLAlchemySemanticBridge, SemanticDeclarativeBase
 from starlette.responses import JSONResponse
 
 from db.client import PostgresClient
-from dependencies.state import app_state
-from routes import semantic
-from routes import chat
+from app.dependencies.state import app_state
+from app.routes import semantic
+from app.routes import chat
 from schema.create_ddl import load_ddl_schema
 
 service_name = os.getenv("LOGFIRE_SERVICE_NAME")

@@ -3,8 +3,8 @@ import json
 from fastapi import APIRouter, HTTPException
 from starlette.responses import Response, HTMLResponse, JSONResponse
 
-from dependencies.state import app_state
-from dependencies.convertors import json_to_markdown
+from app.dependencies.state import app_state
+from app.dependencies.convertors import json_to_markdown
 
 router = APIRouter(
     prefix="/view",
