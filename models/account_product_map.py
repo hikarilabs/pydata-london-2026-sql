@@ -14,12 +14,34 @@ from sqlalchemy.orm import relationship
 
 from semantido.models.declarative_base import SemanticDeclarativeBase
 
+
 @semantic_table(
-    description="Links accounts to supplementary or add-on products beyond their primary product. Examples include overdraft facilities enrolled on a current account, packaged insurance add-ons, or rewards credit cards linked to a savings account.",
-    synonyms=["add-on", "supplementary product", "overdraft facility", "packaged product", "product enrolment"],
+    description=(
+        "Bridge table tracking add-on product enrolments on accounts. "
+        "One account can have multiple active add-on rows (e.g. a debit card "
+        "AND a business overdraft enrolled on the same account). "
+        "FILTER-ONLY TABLE: never use as a JOIN path for balance aggregation — "
+        "it will emit multiple curr_bal_amt rows per account, inflating every "
+        "SUM and AVG. Always use an EXISTS subquery to filter qualifying accounts, "
+        "keeping the balance aggregation on acct_info directly:\n"
+        "  WHERE EXISTS (\n"
+        "    SELECT 1 FROM acct_prod_map m\n"
+        "    JOIN prod_catalog p ON p.prod_id = m.prod_id\n"
+        "    WHERE m.acct_id = a.acct_id\n"
+        "      AND m.prov_status = 'ACTIVE'\n"
+        "      AND <condition>\n"
+        "  )"
+    ),
+    synonyms=[
+        "add-on",
+        "supplementary product",
+        "overdraft facility",
+        "packaged product",
+        "product enrolment",
+    ],
     sql_filters=["WHERE", "JOIN", "ORDER BY"],
     application_context=(
-        "Join to acct_info on acct_id to get the account, and to products on prod_id to get the add-on product details. "
+        "JUse EXISTS subqueries only — never join this table for balance aggregation. It has multiple rows per account and will inflate SUM/AVG. Filter usage: WHERE EXISTS (SELECT 1 FROM acct_prod_map m WHERE m.acct_id = a.acct_id AND m.prov_status = 'ACTIVE' AND ...)."
         "Filter by prov_status = 'ACTIVE' for currently active enrolments. "
         "Use prod_catalog.fee_monthly_amt for the monthly fee applicable to this enrolment."
     ),
@@ -52,10 +74,11 @@ class AccountProductMap(SemanticDeclarativeBase):
     enrol_dt_privacy_level = PrivacyLevel.PUBLIC
     enrol_dt_example = ["2024-01-15", "2023-09-01"]
 
-    prov_status = Column(
-        String(10), nullable=True, server_default="ACTIVE"
+    prov_status = Column(String(10), nullable=True, server_default="ACTIVE")
+    prov_status_description = (
+        "Enrolment status. Values: ACTIVE, CANCELLED. "
+        "Always filter to prov_status = 'ACTIVE' in EXISTS subqueries."
     )
-    prov_status_description = "Current provisioning status of the add-on."
     prov_status_privacy_level = PrivacyLevel.PUBLIC
     prov_status_example = ["ACTIVE", "SUSPENDED", "CANCELLED"]
 

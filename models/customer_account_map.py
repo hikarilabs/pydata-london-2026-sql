@@ -4,9 +4,17 @@ from sqlalchemy import Column, Integer, String, Date, ForeignKey, UniqueConstrai
 from sqlalchemy.orm import relationship
 from semantido.models.declarative_base import SemanticDeclarativeBase
 
+
 @semantic_table(
-    description="Resolves the many-to-many relationship between customers and accounts. Supports joint accounts, power-of-attorney mandates, and corporate account signatories. A single account can have multiple customer relationships; a customer can hold multiple accounts.",
-    synonyms=["customer account link", "account holder", "joint account", "mandate", "signatory", "power of attorney"],
+    description="Bridge table linking customers to accounts. Supports joint accounts (JOINT), mandates (MANDATE), and sole ownership (PRIMARY). ALWAYS filter to rel_typ = 'PRIMARY' when using this bridge for account-level aggregation — without this filter, joint accounts contribute one balance row per customer relationship, inflating all SUM and AVG metrics. Omit this table entirely if the query does not reference any customer attribute.",
+    synonyms=[
+        "customer account link",
+        "account holder",
+        "joint account",
+        "mandate",
+        "signatory",
+        "power of attorney",
+    ],
     sql_filters=["WHERE", "JOIN", "ORDER BY"],
     application_context=(
         "The primary join path from customer to account. Always filter by cust_id to scope to the authenticated customer. "
@@ -40,17 +48,19 @@ class CustomerAccountMap(SemanticDeclarativeBase):
     rel_typ = Column(
         String(20), nullable=False, server_default="PRIMARY"
     )  # PRIMARY, JOINT, MANDATE
-    rel_typ_description = "Nature of the customer's relationship to the account. PRIMARY = sole or lead account holder, JOINT = co-owner with equal rights, MANDATE = third party with operating authority (e.g. power of attorney), SIGNATORY = corporate account signatory."
+    rel_typ_description = "Relationship type between customer and account. Values: PRIMARY (sole or lead holder), JOINT (co-owner), MANDATE (third-party operating authority). MANDATORY FILTER for aggregation: WHERE rel_typ = 'PRIMARY'. Omitting this filter causes joint-account double-counting."
     rel_typ_privacy_level = PrivacyLevel.PUBLIC
     rel_typ_example = ["PRIMARY", "JOINT", "MANDATE", "SIGNATORY"]
 
     eff_from_dt = Column(Date, nullable=False, server_default=text("CURRENT_DATE"))
-    eff_from_dt_description = "Date from which this customer-account relationship is effective."
+    eff_from_dt_description = (
+        "Date from which this customer-account relationship is effective."
+    )
     eff_from_dt_privacy_level = PrivacyLevel.PUBLIC
     eff_from_dt_example = ["2020-01-01", "2023-06-15"]
 
     eff_to_dt = Column(Date, nullable=True)
-    eff_to_dt_description = "Date on which the relationship ended (e.g. mandate revoked, joint holder removed). NULL = still active."
+    eff_to_dt_description = "Date the relationship ended. NULL = still active. For current relationships always add: AND (eff_to_dt IS NULL OR eff_to_dt > CURRENT_DATE)"
     eff_to_dt_privacy_level = PrivacyLevel.PUBLIC
     eff_to_dt_example = ["2024-12-31", None]
 

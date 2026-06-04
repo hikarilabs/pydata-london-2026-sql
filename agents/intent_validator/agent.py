@@ -1,9 +1,9 @@
 from pydantic_ai import RunContext
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
+from typing import Literal
 
-
-from agents.intent_validator.prompts import intent_validator_prompt
+from agents.intent_validator.prompts import intent_validator_prompt, intent_analyst_prompt
 from agents.shared import QueryType, Deps
 
 
@@ -36,15 +36,29 @@ class QueryClassification(BaseModel):
     )
 
 
-# Define the Intent Classifier Agent
-intent_classifier_agent = Agent(
-    "openai:gpt-4o",
-    name="intent_validator_agent",
-    output_type=QueryClassification,
-    deps_type=Deps,
-)
+IntentMode = Literal["user", "analyst"]
+
+_INTENT_PROMPT_MAP = {
+    "user": intent_validator_prompt,
+    "analyst": intent_analyst_prompt,
+}
 
 
-@intent_classifier_agent.system_prompt
-def build_intent_prompt(ctx: RunContext[Deps]) -> str:
-    return intent_validator_prompt(ctx)
+def build_intent_classifier(mode: IntentMode = "user") -> Agent:
+    """Create an intent classifier agent with the specified prompt mode."""
+    prompt_fn = _INTENT_PROMPT_MAP[mode]
+
+    agent = Agent(
+        "openai:gpt-4o",
+        name=f"intent_validator_agent_{mode}",
+        output_type=QueryClassification,
+        deps_type=Deps,
+    )
+
+    agent.system_prompt(prompt_fn)
+    return agent
+
+
+# Agent Pre-built instances
+intent_classifier_agent = build_intent_classifier("user")
+intent_analyst_classifier_agent = build_intent_classifier("analyst")

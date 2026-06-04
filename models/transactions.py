@@ -18,12 +18,31 @@ from typing import Optional
 from sqlalchemy.orm import relationship
 from semantido.models.declarative_base import SemanticDeclarativeBase
 
+
 @semantic_table(
-    description="The central financial ledger. Every monetary movement against an account — credits, debits, fees, interest, and reversals — is recorded here. This is the most write-intensive table in the schema.",
-    synonyms=["transaction", "payment", "debit", "credit", "transfer", "statement entry", "spend", "income", "fee", "interest", "reversal"],
+    description=(
+        "Full transaction ledger. Every monetary movement against an account. "
+        "SIGN CONVENTION: amt is always stored as a positive number — direction "
+        "is encoded in txn_typ, not in the sign of amt. "
+        "SUM(amt) without a signed expression or txn_typ filter cannot represent "
+        "net position and will always return a large positive number."
+    ),
+    synonyms=[
+        "transaction",
+        "payment",
+        "debit",
+        "credit",
+        "transfer",
+        "statement entry",
+        "spend",
+        "income",
+        "fee",
+        "interest",
+        "reversal",
+    ],
     sql_filters=["WHERE", "JOIN", "ORDER BY", "GROUP BY"],
     application_context=(
-        "Always reach this table via data_service.acct_info JOIN data_service.cust_acct_map to scope to the authenticated customer. "
+        "Reach via cust_acct_map only when customer-level scoping is required. For portfolio-level transaction analysis (channel totals, net flow by account), join transactions_ledger directly to acct_info without the customer bridge."
         "Use txn_dt for customer-facing date filtering (e.g. 'last month'). "
         "amt is always positive — use txn_typ to determine direction (DEBIT = money out, CREDIT = money in). "
         "Join to txn_cat_ref on cat_id for category-based spend analysis. "
@@ -39,11 +58,16 @@ class TransactionLedger(SemanticDeclarativeBase):
     )
 
     txn_id = Column(BigInteger, primary_key=True, autoincrement=True)
-    txn_id_description = "Surrogate primary key. Uses BIGSERIAL to support high transaction volumes."
+    txn_id_description = (
+        "Surrogate primary key. Uses BIGSERIAL to support high transaction volumes."
+    )
     txn_id_privacy_level = PrivacyLevel.PUBLIC
 
     txn_ref = Column(String(30), nullable=False, unique=True)
-    txn_ref_description = "Business-facing unique transaction reference (e.g. TXN-2026-0001). Surfaced on statements and in dispute resolution."
+    txn_ref_description = (
+        "Business-facing transaction reference. Use in SELECT output "
+        "to identify a transaction — do not expose the surrogate txn_id."
+    )
     txn_ref_privacy_level = PrivacyLevel.PUBLIC
     txn_ref_example = ["TXN-2026-0001", "TXN-2026-9842"]
 
@@ -60,8 +84,17 @@ class TransactionLedger(SemanticDeclarativeBase):
     cat_id_privacy_level = PrivacyLevel.PUBLIC
     cat_id_example = [3, None]
 
-    txn_typ = Column(String(10), nullable=False)  # DEBIT, CREDIT, FEE, INTEREST, REVERSAL
-    txn_typ_description = "Transaction type. DEBIT = money out, CREDIT = money in, REVERSAL = correction of a prior posting, FEE = product or service fee, INTEREST = interest credit or debit."
+    txn_typ = Column(
+        String(10), nullable=False
+    )  # DEBIT, CREDIT, FEE, INTEREST, REVERSAL
+    txn_typ_description = (
+        "Transaction direction and type. "
+        "Values: CREDIT (money in), DEBIT (money out), "
+        "INTEREST (money in — interest credit), FEE (money out — charges). "
+        "Always include in WHERE or CASE expressions alongside amt. "
+        "CREDIT and INTEREST are positive contributions; "
+        "DEBIT and FEE are negative contributions."
+    )
     txn_typ_privacy_level = PrivacyLevel.PUBLIC
     txn_typ_example = ["DEBIT", "CREDIT", "REVERSAL", "FEE", "INTEREST"]
 
@@ -71,7 +104,14 @@ class TransactionLedger(SemanticDeclarativeBase):
     txn_dt_example = ["2026-05-01", "2026-04-30"]
 
     amt = Column(Numeric(18, 2), nullable=False)
-    amt_description = "Transaction amount in the account's currency. Always stored as a positive number; direction is conveyed by txn_typ."
+    amt_description = (
+        "Transaction amount. Always positive — see txn_typ for direction. "
+        "NEVER use SUM(amt) for net flow or balance change. "
+        "For net flow: SUM(CASE WHEN txn_typ IN ('CREDIT','INTEREST') "
+        "THEN amt ELSE -amt END). "
+        "For outflows only: SUM(amt) WHERE txn_typ IN ('DEBIT','FEE'). "
+        "For inflows only: SUM(amt) WHERE txn_typ IN ('CREDIT','INTEREST')."
+    )
     amt_privacy_level = PrivacyLevel.CONFIDENTIAL
     amt_example = [49.99, 1500.00, 0.25]
 
@@ -81,14 +121,31 @@ class TransactionLedger(SemanticDeclarativeBase):
     ccy_cd_example = ["GBP", "EUR", "USD"]
 
     bal_after_amt = Column(Numeric(18, 2), nullable=True)
-    bal_after_amt_description = "Ledger balance on the account immediately after this transaction was posted. Denormalised for statement generation performance."
+    bal_after_amt_description = (
+        "Stored running balance after this transaction was posted. "
+        "Use this column for running-balance display — do not recompute "
+        "via a window SUM(amt) OVER (...) unless cross-checking, and "
+        "always use the signed expression in that case."
+    )
     bal_after_amt_privacy_level = PrivacyLevel.CONFIDENTIAL
     bal_after_amt_example = [1200.01, -45.00, None]
 
     chan_cd = Column(String(10), nullable=True)  # ATM, MOBILE, ONLINE, POS, BACS, CHAPS
-    chan_cd_description = "Channel through which the transaction was initiated. ATM = cash machine, MOBILE = mobile app, BRANCH = in-branch teller, ONLINE = internet banking, POS = point-of-sale terminal, BACS = BACS direct credit/debit, CHAPS = CHAPS same-day payment."
+    chan_cd_description = (
+        "Transaction channel. Values: ATM, MOBILE, ONLINE, POS, "
+        "BACS, CHAPS, BRANCH. Use in GROUP BY for channel analysis."
+    )
     chan_cd_privacy_level = PrivacyLevel.PUBLIC
-    chan_cd_example = ["ATM", "MOBILE", "BRANCH", "ONLINE", "POS", "BACS", "CHAPS", None]
+    chan_cd_example = [
+        "ATM",
+        "MOBILE",
+        "BRANCH",
+        "ONLINE",
+        "POS",
+        "BACS",
+        "CHAPS",
+        None,
+    ]
 
     narr_txt = Column(String(255), nullable=True)
     narr_txt_description = "Free-text transaction narrative as it appears on the customer's statement. Often sourced verbatim from the originating payment message."
@@ -100,7 +157,6 @@ class TransactionLedger(SemanticDeclarativeBase):
     )
     created_ts_description = "Record creation timestamp."
     created_ts_privacy_level = PrivacyLevel.PUBLIC
-
 
     account = relationship("AccountInfo", back_populates="transactions")
     category = relationship(

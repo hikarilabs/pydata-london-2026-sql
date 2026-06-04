@@ -1,0 +1,57 @@
+Bridge fan-out
+-- Q2: "Show me the average account balance broken down by product category."
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- NAIVE (broken — routes through acct_prod_map, phantom LOAN group)
+SELECT p.prod_cat,
+       AVG(a.curr_bal_amt) AS avg_balance,
+       COUNT(*)            AS acct_count
+FROM   data_service.acct_info     a
+JOIN   data_service.acct_prod_map m ON m.acct_id = a.acct_id
+JOIN   data_service.products      p ON p.prod_id  = m.prod_id
+WHERE  m.prov_status = 'ACTIVE'
+GROUP  BY p.prod_cat
+
+-- CORRECT (primary product via acct_info.prod_id — 1:1 FK, no fan-out)
+SELECT p.prod_cat,
+       AVG(a.curr_bal_amt) AS avg_balance,
+       COUNT(*)            AS acct_count
+FROM   data_service.acct_info a
+JOIN   data_service.products  p ON p.prod_id = a.prod_id
+WHERE  a.acct_stat = 'ACTIVE'
+GROUP  BY p.prod_cat
+
+
+Sign Convention
+-- Q8: "How much did each customer spend this month?"
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- NAIVE (broken — txn_typ = 'DEBIT' misses FEE rows; no customer join)
+SELECT acct_id,
+       SUM(amt) AS total_spend
+FROM   data_service.transactions_ledger
+WHERE  txn_typ = 'DEBIT'
+  AND  txn_dt >= date_trunc('month', CURRENT_DATE)
+GROUP  BY acct_id
+
+-- CORRECT (customer attribute needed → Path 1; spend = DEBIT + FEE)
+SELECT c.cust_ref_no,
+       c.f_name || ' ' || c.l_name AS customer_name,
+       SUM(t.amt)                   AS total_spend
+FROM   data_service.customer            c
+JOIN   data_service.cust_acct_map       cam
+    ON cam.cust_id  = c.cust_id
+   AND cam.rel_typ  = 'PRIMARY'
+   AND (cam.eff_to_dt IS NULL OR cam.eff_to_dt > CURRENT_DATE)
+JOIN   data_service.acct_info           a
+    ON a.acct_id   = cam.acct_id
+   AND a.acct_stat = 'ACTIVE'
+JOIN   data_service.transactions_ledger t
+    ON t.acct_id = a.acct_id
+WHERE  t.txn_typ IN ('DEBIT', 'FEE')
+  AND  t.txn_dt  >= date_trunc('month', CURRENT_DATE)
+GROUP  BY c.cust_ref_no, c.f_name, c.l_name
+ORDER  BY total_spend DESC
+
+Balance ambiguity
+Which accounts are at risk of going overdrawn?

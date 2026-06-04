@@ -4,7 +4,10 @@ from pydantic import BaseModel
 from uuid import uuid4
 
 from dependencies.state import DbClient, DdlSchema, SemanticLayer
-from workflows.chat.workflow import chat_workflow_processor
+from workflows.chat.workflow import (
+    user_chat_workflow_processor,
+    analyst_chat_workflow_processor,
+)
 from workflows.context import AgentConfig
 
 router = APIRouter(
@@ -44,7 +47,7 @@ async def ddl(
     )
 
     return StreamingResponse(
-        chat_workflow_processor(
+        user_chat_workflow_processor(
             customer_id=body.cust_id,
             customer_query=body.customer_query,
             workflow_id=uuid4(),
@@ -55,7 +58,7 @@ async def ddl(
     )
 
 
-@router.post("/semantic/stream")
+@router.post("/semantic/user/stream")
 async def semantic(
     body: ChatRequest,
     db_client: DbClient,
@@ -71,7 +74,34 @@ async def semantic(
     )
 
     return StreamingResponse(
-        chat_workflow_processor(
+        user_chat_workflow_processor(
+            customer_id=body.cust_id,
+            customer_query=body.customer_query,
+            workflow_id=uuid4(),
+            workflow_type="chat",
+            config=config,
+        ),
+        media_type="text/event-stream",
+    )
+
+
+@router.post("/semantic/analyst/stream")
+async def semantic(
+    body: ChatRequest,
+    db_client: DbClient,
+    semantics: SemanticLayer,
+):
+    """
+    Accepts a user query and streams the workflow steps back to the client via SSE.
+    Semantic layer is injected as a dependency and pre-fetched.
+    """
+    config = AgentConfig(
+        db_client=db_client,
+        semantics=semantics,
+    )
+
+    return StreamingResponse(
+        analyst_chat_workflow_processor(
             customer_id=body.cust_id,
             customer_query=body.customer_query,
             workflow_id=uuid4(),

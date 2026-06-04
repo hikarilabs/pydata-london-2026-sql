@@ -11,6 +11,7 @@ router = APIRouter(
     tags=["SemanticRoutes"],
 )
 
+
 @router.get("/ddl", response_class=Response)
 async def semantic_markdown():
     """
@@ -33,6 +34,7 @@ async def semantic_markdown():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/semantic/markdown", response_class=Response)
 async def semantic_markdown():

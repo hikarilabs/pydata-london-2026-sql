@@ -4,9 +4,20 @@ from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from semantido.models.declarative_base import SemanticDeclarativeBase
 
+
 @semantic_table(
-    description="Reference table of transaction categories used to classify entries in txn_ledger. Supports a two-level hierarchy via parent_cat_id. Aligned with ISO 18245 Merchant Category Codes (MCC) where applicable.",
-    synonyms=["category", "spending category", "transaction type", "merchant category", "spend classification"],
+    description=(
+        "Transaction category reference. Join to txn_ledger via cat_id to "
+        "classify transactions by spending type. is_debit_flg = TRUE means "
+        "the category typically represents an outflow."
+    ),
+    synonyms=[
+        "category",
+        "spending category",
+        "transaction type",
+        "merchant category",
+        "spend classification",
+    ],
     sql_filters=["WHERE", "JOIN", "ORDER BY"],
     application_context=(
         "Join to transactions_ledger on cat_id to classify or filter transactions by category. "
@@ -24,17 +35,29 @@ class TransactionCategoryReference(SemanticDeclarativeBase):
     cat_id_privacy_level = PrivacyLevel.PUBLIC
 
     cat_cd = Column(String(15), nullable=False, unique=True)
-    cat_cd_description = "Short code for the category (e.g. GROC, SALARY, ATM_WDL). Used in downstream categorisation logic and spend analytics."
+    cat_cd_description = (
+        "Short category code. Values include: SALARY, GROC, UTIL, INTR. "
+        "Use in WHERE for category-specific queries."
+    )
     cat_cd_privacy_level = PrivacyLevel.PUBLIC
     cat_cd_example = ["GROC", "SALARY", "ATM_WDL", "DINING", "UTILITIES", "INTEREST"]
 
     cat_desc = Column(String(100), nullable=True)
     cat_desc_description = "Human-readable description of the category."
     cat_desc_privacy_level = PrivacyLevel.PUBLIC
-    cat_desc_example = ["Groceries & Supermarkets", "Salary / Payroll Credit", "ATM Cash Withdrawal", None]
+    cat_desc_example = [
+        "Groceries & Supermarkets",
+        "Salary / Payroll Credit",
+        "ATM Cash Withdrawal",
+        None,
+    ]
 
     is_debit_flg = Column(Boolean, nullable=False, server_default="true")
-    is_debit_flg_description = "Indicates whether this category typically represents a debit (money out) transaction. TRUE = debit (e.g. groceries), FALSE = credit (e.g. salary, interest)."
+    is_debit_flg_description = (
+        "TRUE = this category is typically an outflow. "
+        "Does not replace txn_typ — always use txn_typ for direction "
+        "in signed expressions."
+    )
     is_debit_flg_privacy_level = PrivacyLevel.PUBLIC
     is_debit_flg_example = [True, False]
 

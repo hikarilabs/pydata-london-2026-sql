@@ -4,9 +4,26 @@ from sqlalchemy import Column, Integer, String, Numeric, Boolean, CHAR
 from sqlalchemy.orm import relationship
 from semantido.models.declarative_base import SemanticDeclarativeBase
 
+
 @semantic_table(
-    description="Master list of bankable products offered to customers. Products are referenced by accounts (primary product) and via the acct_prod_map bridge (add-ons). Covers deposits, loans, cards, and investment wrappers.",
-    synonyms=["product", "savings account", "ISA", "mortgage", "loan", "credit card", "debit card", "fixed bond", "current account product"],
+    description=(
+        "Master list of bankable products. prod_cat distinguishes primary "
+        "account products (DEPOSIT, LOAN) from add-on features (CARD) that "
+        "are enrolled via acct_prod_map. For balance aggregation by product, "
+        "join directly from acct_info via acct_info.prod_id — this reflects "
+        "each account's primary product and does not fan out."
+    ),
+    synonyms=[
+        "product",
+        "savings account",
+        "ISA",
+        "mortgage",
+        "loan",
+        "credit card",
+        "debit card",
+        "fixed bond",
+        "current account product",
+    ],
     sql_filters=["WHERE", "JOIN", "ORDER BY"],
     application_context=(
         "Join to acct_info on prod_id to get the product associated with an account. "
@@ -24,24 +41,45 @@ class ProductCatalog(SemanticDeclarativeBase):
     prod_id_privacy_level = PrivacyLevel.PUBLIC
 
     prod_cd = Column(String(20), nullable=False, unique=True)
-    prod_cd_description = "Short product code used in system integrations (e.g. DEP-SAV-ISA, LN-MORT-RES)."
+    prod_cd_description = (
+        "Short product code for filtering (e.g. 'ADDON-CRED-RWD', "
+        "'LN-BIZ-OVD'). Use in WHERE clauses to target specific products."
+    )
     prod_cd_privacy_level = PrivacyLevel.PUBLIC
     prod_cd_example = ["DEP-SAV-ISA", "LN-MORT-RES", "CARD-CREDIT-RWD"]
 
     prod_nm = Column(String(100), nullable=False)
     prod_nm_description = "Full marketing / display name of the product."
     prod_nm_privacy_level = PrivacyLevel.PUBLIC
-    prod_nm_example = ["Instant Access Saver", "Residential Mortgage", "Rewards Credit Card"]
+    prod_nm_example = [
+        "Instant Access Saver",
+        "Residential Mortgage",
+        "Rewards Credit Card",
+    ]
 
     prod_cat = Column(String(20), nullable=False)  # DEPOSIT, LOAN, CARD
-    prod_cat_description = "Top-level product category. DEPOSIT = deposit accounts, LOAN = lending products, CARD = payment cards, INVEST = investment wrappers."
+    prod_cat_description = (
+        "Top-level product category. Values: DEPOSIT, LOAN, CARD. "
+        "Use for GROUP BY in balance-by-category queries. "
+        "When reached via acct_info.prod_id, one row per account — safe. "
+        "When reached via acct_prod_map, multiple rows per account — "
+        "see acct_prod_map warning."
+    )
     prod_cat_privacy_level = PrivacyLevel.PUBLIC
     prod_cat_example = ["DEPOSIT", "LOAN", "CARD", "INVEST"]
 
     prod_sub_cat = Column(String(20), nullable=True)
     prod_sub_cat_description = "Secondary classification within the category (e.g. CURRENT, ISA, MORTGAGE, OVERDRAFT, DEBIT, CREDIT)."
     prod_sub_cat_privacy_level = PrivacyLevel.PUBLIC
-    prod_sub_cat_example = ["CURRENT", "ISA", "MORTGAGE", "OVERDRAFT", "DEBIT", "CREDIT", None]
+    prod_sub_cat_example = [
+        "CURRENT",
+        "ISA",
+        "MORTGAGE",
+        "OVERDRAFT",
+        "DEBIT",
+        "CREDIT",
+        None,
+    ]
 
     int_rate_pct = Column(Numeric(7, 4), nullable=True)
     int_rate_pct_description = "Annual interest rate as a percentage (e.g. 4.1000 = 4.10% AER). For lending products this is the APR; for deposits, the AER. NULL for non-interest-bearing products."
