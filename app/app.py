@@ -1,6 +1,10 @@
 import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import logfire
 
 from fastapi import FastAPI, Request, HTTPException
@@ -10,9 +14,9 @@ from semantido import SQLAlchemySemanticBridge, SemanticDeclarativeBase
 from starlette.responses import JSONResponse
 
 from db.client import PostgresClient
-from app.dependencies.state import app_state
-from app.routes import semantic
-from app.routes import chat
+from dependencies.state import app_state
+from routes import semantic
+from routes import chat
 from schema.create_ddl import load_ddl_schema
 
 service_name = os.getenv("LOGFIRE_SERVICE_NAME")
@@ -21,10 +25,6 @@ logfire.configure(service_name=service_name, environment=environment)
 
 logfire.instrument_pydantic_ai()
 logfire.instrument_asyncpg()
-
-app = FastAPI()
-logfire.instrument_fastapi(app)
-
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -70,6 +70,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+logfire.instrument_fastapi(app)
+
 
 app.include_router(semantic.router)
 app.include_router(chat.router)
