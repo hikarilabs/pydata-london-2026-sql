@@ -1,5 +1,6 @@
 import asyncio
 from db.client import PostgresClient
+from db.url_utils import _normalise_url
 
 
 async def test_neon_client() -> None:
@@ -10,7 +11,7 @@ async def test_neon_client() -> None:
         await client.connect()
 
         # 2. Confirm the normalized URL scheme is correct
-        normalized = PostgresClient._normalise_url(client.database_url)
+        normalized = _normalise_url(client.database_url)
         scheme = normalized.split("://")[0]
         assert scheme == "postgresql+asyncpg", f"Unexpected scheme: {scheme}"
         print(f"URL scheme correct: '{scheme}'")

@@ -41,7 +41,7 @@ from semantido.models.declarative_base import SemanticDeclarativeBase
     ],
     sql_filters=["WHERE", "JOIN", "ORDER BY"],
     application_context=(
-        "JUse EXISTS subqueries only — never join this table for balance aggregation. It has multiple rows per account and will inflate SUM/AVG. Filter usage: WHERE EXISTS (SELECT 1 FROM acct_prod_map m WHERE m.acct_id = a.acct_id AND m.prov_status = 'ACTIVE' AND ...)."
+        "Use EXISTS subqueries only — never join this table for balance aggregation. It has multiple rows per account and will inflate SUM/AVG. Filter usage: WHERE EXISTS (SELECT 1 FROM acct_prod_map m WHERE m.acct_id = a.acct_id AND m.prov_status = 'ACTIVE' AND ...)."
         "Filter by prov_status = 'ACTIVE' for currently active enrolments. "
         "Use prod_catalog.fee_monthly_amt for the monthly fee applicable to this enrolment."
     ),
