@@ -13,6 +13,7 @@ The service exposes database schema metadata as a machine-readable semantic laye
 
 ## Project structure
 
+```text
 pydata-london-2026-sql/
 ├── agents/
 │   ├── analyst/
@@ -25,11 +26,17 @@ pydata-london-2026-sql/
 │   │   ├── agent.py
 │   │   └── prompts.py
 │   ├── sql_validator/
+│   │   ├── __init__.py
+│   │   └── agent.py
 │   ├── __init__.py
 │   └── shared.py
 ├── alembic/
 ├── app/
 │   ├── dependencies/
+│   │   ├── __init__.py
+│   │   ├── convertors.py
+│   │   ├── logger.py
+│   │   └── state.py
 │   ├── routes/
 │   │   ├── __init__.py
 │   │   ├── chat.py
@@ -54,9 +61,18 @@ pydata-london-2026-sql/
 │   ├── transaction_category.py
 │   └── transactions.py
 ├── schema/
+│   ├── __init__.py
+│   ├── create_ddl.py
+│   └── sql/
+│       └── schema.sql
 ├── workflows/
 │   ├── chat/
+│   │   ├── __init__.py
+│   │   └── workflow.py
 │   ├── query/
+│   │   ├── __init__.py
+│   │   ├── execute.py
+│   │   └── serialiser.py
 │   ├── __init__.py
 │   ├── context.py
 │   └── steps.py
@@ -70,6 +86,7 @@ pydata-london-2026-sql/
 ├── questions.txt
 ├── README.md
 └── uv.lock
+```
 
 ## Requirements
 
